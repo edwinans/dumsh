@@ -146,8 +146,8 @@ int exec_line(){
         args[i] = 0;
         
         char *filename = args[i+1];
-        file_d = open(filename, O_WRONLY | O_CREAT | O_TRUNC);
-        file_tmp = open("tmp", O_WRONLY | O_CREAT | O_TRUNC);
+        file_d = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+        file_tmp = open("tmp", O_RDWR | O_CREAT | O_TRUNC, 0666);
     }
 
 
@@ -168,6 +168,13 @@ int exec_line(){
             if (execvp(args[0], args) < 0)
                 print_errno();
 
+            args[0]="chmod";
+            args[1]="755";
+            args[2]="tmp";
+            args[3]=0;
+            if (execvp(args[0], args) < 0)
+                print_errno();
+
             close(file_tmp);
             exit(0);
             break;
@@ -179,15 +186,17 @@ int exec_line(){
                     write(file_d, "#", 2);
                 write(file_d, "\n", 2);
             
-                file_tmp = open("tmp", O_RDONLY);
+                file_tmp = open("tmp", O_RDWR);
                 int sz = read(file_tmp, buf, BUFSZ);
                 if(sz <0)
                     print_errno();
                 printf("sz %d\n", sz);
                 write(file_d, buf, sz);
-                //remove("tmp");
+
                 close(file_d);
                 close(file_tmp);
+                remove("tmp");
+
             }
             break;
     }
