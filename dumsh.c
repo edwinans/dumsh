@@ -4,6 +4,8 @@
 #include <string.h>
 #include <assert.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #define DEBUG 1
 
@@ -39,6 +41,11 @@ void print_blue(char *buf, int n){
     write(STDOUT_FILENO, COLBLUE, strlen(COLBLUE));
     write(STDOUT_FILENO, buf, n);
     write(STDOUT_FILENO, COLDEF, strlen(COLDEF));
+}
+
+void print_errno(){
+    char *error = strerror( errno );
+    print_err(error , strlen(error));
 }
 
 //this function is just for debugging (use high level io)
@@ -98,10 +105,20 @@ int exec_line(){
     if(!strcmp(args[0], "exit"))
         return EXIT_DUMSH;
 
-    if (execvp(args[0], args) < 0){
-        char *error = strerror( errno );
-        print_err(error , strlen(error));
+    switch (fork()){
+        case -1:
+            print_errno();
+            break;
+        case 0:
+            if (execvp(args[0], args) < 0)
+                print_errno();
+            exit(0);
+            break;
+        default:
+            wait(NULL);
+            break;
     }
+
 
     return 0;
 }
@@ -122,7 +139,8 @@ int run(){
 int main(int argc, char const *argv[]){ 
 
     while(1){
-        run();
+        if(run() == EXIT_DUMSH)
+            break;
     }
 
     return 0;
