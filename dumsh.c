@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #define DEBUG 1
 
@@ -98,12 +100,13 @@ char **split_line(char *line){
 int dumsh_cd(char **args){
     if(!args[1])
         args[1] = "/";
-        
+
     if(chdir(args[1]) < 0)
         print_errno();
     
     return 0;
 }
+
 
 int exec_line(){
     int sz = read(STDIN_FILENO, buf, BUFSZ);
@@ -121,6 +124,22 @@ int exec_line(){
     if(!strcmp(args[0], "cd"))
         return dumsh_cd(args);
 
+    int i=0, type=0;
+    while(args[i]){
+        if(!strcmp(args[i], ">1")){
+            type=1;
+            break;
+        }
+        if(!strcmp(args[i], ">2")){
+            type=2;
+            break;
+        }
+        i++;
+    }
+
+    int file_d;
+
+
 
     switch (fork()){
         case -1:
@@ -130,8 +149,23 @@ int exec_line(){
             write(STDOUT_FILENO, COLGREEN, strlen(COLGREEN));
             //write(STDERR_FILENO, COLRED, strlen(COLRED));
 
+            if(type==1){
+                if(!args[i+1]){
+                    char err[] = "DUMSH error : no file specified after >1 \n";
+                    print_err("DUMSH error : no file specified after >1 \n", strlen(err));
+                    return -1;
+                }
+                args[i] = 0;
+                
+                char *filename = args[i+1];
+                file_d = open(filename, O_APPEND | O_WRONLY | O_CREAT);
+                dup2(file_d, STDOUT_FILENO);
+            }
+
             if (execvp(args[0], args) < 0)
                 print_errno();
+            
+            close(file_d);
             exit(0);
             break;
         default:
