@@ -96,7 +96,12 @@ char **split_line(char *line){
 }
 
 int dumsh_cd(char **args){
-
+    if(!args[1])
+        args[1] = "/";
+        
+    if(chdir(args[1]) < 0)
+        print_errno();
+    
     return 0;
 }
 
@@ -104,7 +109,8 @@ int exec_line(){
     int sz = read(STDIN_FILENO, buf, BUFSZ);
     if(sz<=1)
         return 0;
-    buf[sz] = '\0';
+    buf[sz] = '\0'; //transform sz first bytes to string
+
     char **args = split_line(buf);
     if(DEBUG)
         print_args(args);
@@ -112,11 +118,18 @@ int exec_line(){
     if(!strcmp(args[0], "exit"))
         return EXIT_DUMSH;
 
+    if(!strcmp(args[0], "cd"))
+        return dumsh_cd(args);
+
+
     switch (fork()){
         case -1:
             print_errno();
             break;
         case 0:
+            write(STDOUT_FILENO, COLGREEN, strlen(COLGREEN));
+            //write(STDERR_FILENO, COLRED, strlen(COLRED));
+
             if (execvp(args[0], args) < 0)
                 print_errno();
             exit(0);
