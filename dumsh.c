@@ -136,8 +136,10 @@ int exec_line(){
         i++;
     }
 
-    int file_d, file_tmp;
-    if(type==1){
+    int file_d, file_err;
+    char *filename_err;
+
+    if(type){
         if(!args[i+1]){
             char err[] = "DUMSH error : no file specified after >1 \n";
             print_err("DUMSH error : no file specified after >1 \n", strlen(err));
@@ -147,7 +149,8 @@ int exec_line(){
         
         char *filename = args[i+1];
         file_d = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-        file_tmp = open("tmp", O_RDWR | O_CREAT | O_TRUNC, 0666);
+        filename_err = strcat(filename, ".err");
+        file_err = open(filename_err, O_RDWR | O_CREAT | O_TRUNC, 0666);
     }
 
 
@@ -159,23 +162,17 @@ int exec_line(){
             write(STDOUT_FILENO, COLGREEN, strlen(COLGREEN));
             //write(STDERR_FILENO, COLRED, strlen(COLRED));
 
-            if(type==1){
+            if(type){
                 
                 dup2(file_d, STDOUT_FILENO);
-                dup2(file_tmp, STDERR_FILENO);
+                dup2(file_err, STDERR_FILENO);
             }
 
             if (execvp(args[0], args) < 0)
                 print_errno();
 
-            args[0]="chmod";
-            args[1]="755";
-            args[2]="tmp";
-            args[3]=0;
-            if (execvp(args[0], args) < 0)
-                print_errno();
 
-            close(file_tmp);
+            close(file_err);
             exit(0);
             break;
         default:
@@ -186,18 +183,23 @@ int exec_line(){
                     write(file_d, "#", 2);
                 write(file_d, "\n", 2);
             
-                file_tmp = open("tmp", O_RDWR);
-                int sz = read(file_tmp, buf, BUFSZ);
+                file_err = open(filename_err, O_RDWR);
+                int sz = read(file_err, buf, BUFSZ);
                 if(sz <0)
                     print_errno();
                 printf("sz %d\n", sz);
                 write(file_d, buf, sz);
 
                 close(file_d);
-                close(file_tmp);
-                remove("tmp");
+                close(file_err);
+                remove(filename_err);
 
             }
+            if(type == 2){
+                close(file_d);
+                close(file_err);
+            }
+
             break;
     }
 
