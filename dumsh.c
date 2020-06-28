@@ -35,7 +35,7 @@ void print_out(char *buf, int n){
 void print_err(char *buf, int n){
     write(STDERR_FILENO, COLRED, strlen(COLRED));
     write(STDERR_FILENO, buf, n);
-    write(STDERR_FILENO, "\n", 2);
+    // write(STDERR_FILENO, "\n", 2);
     write(STDERR_FILENO, COLDEF, strlen(COLDEF));
 }
 
@@ -167,12 +167,10 @@ int exec_line(){
 
         case 0:
             write(STDOUT_FILENO, COLGREEN, strlen(COLGREEN));
-            //write(STDERR_FILENO, COLRED, strlen(COLRED));
 
             dup2(file_err, STDERR_FILENO);
 
             if(type){
-                
                 dup2(file_d, STDOUT_FILENO);
             }
 
