@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define RED "0;31"
 #define GREEN "0;32"
