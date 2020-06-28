@@ -60,7 +60,6 @@ void print_args(char **args){
 }
 
 char **split_line(char *line){
-    size_t len = strlen(line);
     char **args = 0;
     int count=0;
     char *tmp = line;
@@ -85,18 +84,26 @@ char **split_line(char *line){
    
     int i=0;
     while( token != NULL ) {
+        // strcpy(args[i], token);
         args[i] = strdup(token);
         token = strtok(NULL, s);
         i++;
     }
-    assert(i == count);
+    // assert(i == count);
     args[i] = 0;
 
     return args;
 }
 
+int dumsh_cd(char **args){
+
+    return 0;
+}
+
 int exec_line(){
     int sz = read(STDIN_FILENO, buf, BUFSZ);
+    if(sz<=1)
+        return 0;
     buf[sz] = '\0';
     char **args = split_line(buf);
     if(DEBUG)
@@ -137,6 +144,8 @@ int run(){
 
 
 int main(int argc, char const *argv[]){ 
+
+    write(STDOUT_FILENO, COLGREEN, strlen(COLGREEN));
 
     while(1){
         if(run() == EXIT_DUMSH)
