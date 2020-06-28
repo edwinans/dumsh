@@ -7,18 +7,18 @@ tout les fonctionnalite sont implementer dans le cadre du projet:
 
 ## Choix d'implementation
 
-####Navigation:
+#### Navigation:
 la navigation dans le DUMSH ce fait avec des appelle de fonction `getcwd` pour recupere le chemin absolu et `chdir` pour naviguer avec un `cédérom` (la seule différence avec le bash et la commande `cd` sans arg qui dans notre cas nous deplace vers la root `/` a la place de`~`).
 
-####Couleur:
+#### Couleur:
 pour gérer les bonnes couleurs j'ai implementer plusieurs fonctions avec quelque MACRO afin de les appeler dans le nécessaire (`print_out` en vert , `print_err` en rouge et `print_blue` en bleu).la seule difficulté était le cas de couleur sans redirection pour cela je redirige la STDERR vers un fichier temporaire "tmp" qui serait à la fin supprimer ensuite j'affiche d'abbord la STDOUT de la commande en vert et après on affiche le contenu de fichier Tmp sur STDERR et en rouge.
 
-####Interface continue:
+#### Interface continue:
 pour bien implementer la partie "L'invite du shell dans ce cas ne devra pas revenir avant la fin de l'affichage" on utilise les fonctions:
 `fork` , `execvp`, `wait` .
 pour pouvoir attendre la fin de l'execution d'une commande externe avant de re-afficher l'interface du DUMSH. (voir le grand `switch(fork())` dans `exec_line`).
 
-####annexe:
+#### annexe:
 
 -Affichage du chemin cours apres l'utilisation de `cd` dans l'interface.
 
