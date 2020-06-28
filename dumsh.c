@@ -35,7 +35,7 @@ void print_out(char *buf, int n){
 void print_err(char *buf, int n){
     write(STDERR_FILENO, COLRED, strlen(COLRED));
     write(STDERR_FILENO, buf, n);
-    write(STDOUT_FILENO, "\n", 2);
+    write(STDERR_FILENO, "\n", 2);
     write(STDERR_FILENO, COLDEF, strlen(COLDEF));
 }
 
@@ -137,7 +137,7 @@ int exec_line(){
         i++;
     }
 
-    int file_d, file_err, file_tmp;
+    int file_d, file_err;
     char *filename_err;
 
     if(type){
@@ -153,6 +153,11 @@ int exec_line(){
         filename_err = strcat(filename, ".err");
         file_err = open(filename_err, O_RDWR | O_CREAT | O_TRUNC, 0666);
     }
+    else{
+        filename_err = "tmp";
+        file_err = open(filename_err, O_RDWR | O_CREAT | O_TRUNC, 0666);
+    }
+
 
 
     switch (fork()){
@@ -164,10 +169,11 @@ int exec_line(){
             write(STDOUT_FILENO, COLGREEN, strlen(COLGREEN));
             //write(STDERR_FILENO, COLRED, strlen(COLRED));
 
+            dup2(file_err, STDERR_FILENO);
+
             if(type){
                 
                 dup2(file_d, STDOUT_FILENO);
-                dup2(file_err, STDERR_FILENO);
             }
 
             if (execvp(args[0], args) < 0)
@@ -200,9 +206,21 @@ int exec_line(){
                 remove(filename_err);
 
             }
-            if(type == 2){
+            else if(type == 2){
                 close(file_d);
                 close(file_err);
+            }
+            else{
+                file_err = open(filename_err, O_RDWR);
+                int sz=1;
+                while(sz>0){
+                    sz = read(file_err, buf, BUFSZ);
+                    if(sz <0)
+                        print_errno();
+                    print_err(buf, sz);
+                }
+                close(file_err);
+                remove(filename_err);
             }
 
             break;
