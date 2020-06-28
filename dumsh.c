@@ -123,6 +123,7 @@ int exec_line(){
     if(!strcmp(args[0], "cd"))
         return dumsh_cd(args);
 
+    //to know if we have redirection
     int i=0, type=0;
     while(args[i]){
         if(!strcmp(args[i], ">1")){
@@ -136,13 +137,13 @@ int exec_line(){
         i++;
     }
 
-    int file_d, file_err;
+    int file_d, file_err, file_tmp;
     char *filename_err;
 
     if(type){
         if(!args[i+1]){
             char err[] = "DUMSH error : no file specified after >1 \n";
-            print_err("DUMSH error : no file specified after >1 \n", strlen(err));
+            print_err(err, strlen(err));
             return -1;
         }
         args[i] = 0;
@@ -158,6 +159,7 @@ int exec_line(){
         case -1:
             print_errno();
             break;
+
         case 0:
             write(STDOUT_FILENO, COLGREEN, strlen(COLGREEN));
             //write(STDERR_FILENO, COLRED, strlen(COLRED));
@@ -175,6 +177,7 @@ int exec_line(){
             close(file_err);
             exit(0);
             break;
+
         default:
             wait(NULL);
 
@@ -184,11 +187,13 @@ int exec_line(){
                 write(file_d, "\n", 2);
             
                 file_err = open(filename_err, O_RDWR);
-                int sz = read(file_err, buf, BUFSZ);
-                if(sz <0)
-                    print_errno();
-                printf("sz %d\n", sz);
-                write(file_d, buf, sz);
+                int sz=1;
+                while(sz>0){
+                    sz = read(file_err, buf, BUFSZ);
+                    if(sz <0)
+                        print_errno();
+                    write(file_d, buf, sz);
+                }
 
                 close(file_d);
                 close(file_err);
@@ -202,7 +207,6 @@ int exec_line(){
 
             break;
     }
-
 
     return 0;
 }
