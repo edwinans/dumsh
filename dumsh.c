@@ -107,7 +107,6 @@ int dumsh_cd(char **args){
     return 0;
 }
 
-
 int exec_line(){
     int sz = read(STDIN_FILENO, buf, BUFSZ);
     if(sz<=1)
@@ -137,8 +136,19 @@ int exec_line(){
         i++;
     }
 
-    int file_d;
-
+    int file_d, file_tmp;
+    if(type==1){
+        if(!args[i+1]){
+            char err[] = "DUMSH error : no file specified after >1 \n";
+            print_err("DUMSH error : no file specified after >1 \n", strlen(err));
+            return -1;
+        }
+        args[i] = 0;
+        
+        char *filename = args[i+1];
+        file_d = open(filename, O_WRONLY | O_CREAT | O_TRUNC);
+        file_tmp = open("tmp", O_WRONLY | O_CREAT | O_TRUNC);
+    }
 
 
     switch (fork()){
@@ -150,26 +160,35 @@ int exec_line(){
             //write(STDERR_FILENO, COLRED, strlen(COLRED));
 
             if(type==1){
-                if(!args[i+1]){
-                    char err[] = "DUMSH error : no file specified after >1 \n";
-                    print_err("DUMSH error : no file specified after >1 \n", strlen(err));
-                    return -1;
-                }
-                args[i] = 0;
                 
-                char *filename = args[i+1];
-                file_d = open(filename, O_APPEND | O_WRONLY | O_CREAT);
                 dup2(file_d, STDOUT_FILENO);
+                dup2(file_tmp, STDERR_FILENO);
             }
 
             if (execvp(args[0], args) < 0)
                 print_errno();
-            
-            close(file_d);
+
+            close(file_tmp);
             exit(0);
             break;
         default:
             wait(NULL);
+
+            if(type==1){
+                for(int i=0;i<80;i++)
+                    write(file_d, "#", 2);
+                write(file_d, "\n", 2);
+            
+                file_tmp = open("tmp", O_RDONLY);
+                int sz = read(file_tmp, buf, BUFSZ);
+                if(sz <0)
+                    print_errno();
+                printf("sz %d\n", sz);
+                write(file_d, buf, sz);
+                //remove("tmp");
+                close(file_d);
+                close(file_tmp);
+            }
             break;
     }
 
