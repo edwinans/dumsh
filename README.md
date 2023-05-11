@@ -3,15 +3,13 @@ Le mini-projet du cours de système (L3 Math-Info).
 
 ## Installation
 
-###
-
-```
-$ make clean
-$ make core      # compile core file
-./dumsh
-clear		#clear the screen
-exit            #to exit the DUMSH	
+```sh
+make clean
+make    # compile core file
+./dumsh # run the dumsh
+clear   # clear the screen
+exit    # exit the dumsh	
 ```
 
 ## Configuration
-I have a macro `DEBUG`, if it's true i.e 1 , you'll have some logs printed in the shell.
+Set the `DEBUG` macro to 1, to have more logs in the shell.
