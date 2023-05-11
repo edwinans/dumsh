@@ -1,12 +1,11 @@
 CC=gcc
-CFLAGS= -g -Wall -o 
+CFLAGS= -g -Wall -o
 
-.PHONY:all 
+.PHONY:all
 all: dumsh
 
 dumsh:dumsh.c
 	$(CC)  $(CFLAGS)  dumsh dumsh.c
-
 
 .PHONY:clean
 clean:
